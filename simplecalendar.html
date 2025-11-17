@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historical and Future Calendar (1945-2045)</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2980b9;
+            --text-color: #333;
+            --light-color: #f5f5f5;
+            --border-color: #ddd;
+            --today-color: #e74c3c;
+            --weekend-color: #f39c12;
+            --other-month-color: #95a5a6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .calendar-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .calendar-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .calendar-title {
+            margin: 0;
+            font-size: 2rem;
+        }
+
+        .calendar-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+
+        .nav-button {
+            background-color: var(--secondary-color);
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .nav-button:hover {
+            background-color: #1a5276;
+        }
+
+        .year-selector {
+            padding: 7px;
+            border-radius: 5px;
+            border: none;
+            background-color: rgba(255,255,255,0.2);
+            color: rgb(61, 61, 61);
+            font-weight: bold;
+            margin: 0 10px;
+        }
+
+        .month-selector {
+            padding: 7px;
+            border-radius: 5px;
+            border: none;
+            background-color: rgba(255,255,255,0.2);
+            color: rgb(61, 61, 61);
+            font-weight: bold;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background-color: var(--border-color);
+        }
+
+        .day-header {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 10px;
+            font-weight: bold;
+        }
+
+        .day-cell {
+            background-color: white;
+            padding: 10px;
+            min-height: 80px;
+            border: none;
+            position: relative;
+        }
+
+        .day-number {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .other-month {
+            color: var(--other-month-color);
+            background-color: var(--light-color);
+        }
+
+        .today {
+            background-color: rgba(231, 76, 60, 0.1);
+            border-left: 3px solid var(--today-color);
+        }
+
+        .today .day-number {
+            color: var(--today-color);
+            font-weight: bold;
+        }
+
+        .weekend {
+            background-color: rgba(243, 156, 18, 0.05);
+        }
+
+        .holiday {
+            color: #e74c3c;
+            font-size: 0.8rem;
+        }
+
+        .tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .day-cell:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .details-panel {
+            padding: 20px;
+            background-color: var(--light-color);
+            border-top: 1px solid var(--border-color);
+            display: none;
+        }
+
+        .details-title {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+
+        .holiday-marker {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: #e74c3c;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        @media screen and (max-width: 768px) {
+            .calendar-grid {
+                grid-template-columns: repeat(7, 1fr);
+            }
+            
+            .day-cell {
+                min-height: 60px;
+                padding: 5px;
+            }
+            
+            .day-number {
+                font-size: 0.9rem;
+            }
+            
+            .calendar-title {
+                font-size: 1.5rem;
+            }
+            
+            .nav-button {
+                padding: 5px 10px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            .calendar-header {
+                padding: 10px;
+            }
+            
+            .day-cell {
+                min-height: 40px;
+                font-size: 0.8rem;
+            }
+            
+            .day-number {
+                margin-bottom: 2px;
+            }
+            
+            .calendar-nav {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .nav-group {
+                display: flex;
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <h1 class="calendar-title">Kalender Kalyzet</h1>
+            <div class="calendar-nav">
+                <div class="nav-group">
+                    <button class="nav-button" id="prev-year">« Tahun</button>
+                    <select class="year-selector" id="year-selector"></select>
+                    <button class="nav-button" id="next-year">Tahun »</button>
+                </div>
+                <div class="nav-group">
+                    <button class="nav-button" id="prev-month">« Bulan</button>
+                    <select class="month-selector" id="month-selector"></select>
+                    <button class="nav-button" id="next-month">Bulan »</button>
+                </div>
+                <button class="nav-button" id="today-btn">Hari Ini</button>
+            </div>
+        </div>
+        
+        <div class="calendar-grid" id="calendar-header">
+            <div class="day-header">Minggu</div>
+            <div class="day-header">Senin</div>
+            <div class="day-header">Selasa</div>
+            <div class="day-header">Rabu</div>
+            <div class="day-header">Kamis</div>
+            <div class="day-header">Jumat</div>
+            <div class="day-header">Sabtu</div>
+        </div>
+        
+        <div class="calendar-grid" id="calendar-days"></div>
+        
+        <div class="details-panel" id="details-panel">
+            <h3 class="details-title" id="details-date">Detail Tanggal</h3>
+            <div id="details-content"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Current date
+            const currentDate = new Date();
+            let currentYear = currentDate.getFullYear();
+            let currentMonth = currentDate.getMonth();
+            
+            // DOM elements
+            const calendarDays = document.getElementById('calendar-days');
+            const monthSelector = document.getElementById('month-selector');
+            const yearSelector = document.getElementById('year-selector');
+            const prevMonthBtn = document.getElementById('prev-month');
+            const nextMonthBtn = document.getElementById('next-month');
+            const prevYearBtn = document.getElementById('prev-year');
+            const nextYearBtn = document.getElementById('next-year');
+            const todayBtn = document.getElementById('today-btn');
+            const detailsPanel = document.getElementById('details-panel');
+            const detailsDate = document.getElementById('details-date');
+            const detailsContent = document.getElementById('details-content');
+            
+            // Initialize month selector
+            const monthNames = [
+                'Januari', 'Februari', 'Maret', 'April', 
+                'Mei', 'Juni', 'Juli', 'Agustus',
+                'September', 'Oktober', 'November', 'Desember'
+            ];
+            
+            monthNames.forEach((month, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = month;
+                monthSelector.appendChild(option);
+            });
+            
+            // Initialize year selector (1945-2045)
+            for (let year = 1945; year <= 2045; year++) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearSelector.appendChild(option);
+            }
+            
+            // Set initial values
+            monthSelector.value = currentMonth;
+            yearSelector.value = currentYear;
+            
+            // Generate calendar
+            generateCalendar(currentYear, currentMonth);
+            
+            // Event listeners
+            monthSelector.addEventListener('change', function() {
+                currentMonth = parseInt(this.value);
+                generateCalendar(currentYear, currentMonth);
+            });
+            
+            yearSelector.addEventListener('change', function() {
+                currentYear = parseInt(this.value);
+                generateCalendar(currentYear, currentMonth);
+            });
+            
+            prevMonthBtn.addEventListener('click', function() {
+                if (currentMonth === 0) {
+                    currentMonth = 11;
+                    currentYear--;
+                } else {
+                    currentMonth--;
+                }
+                updateSelectors();
+                generateCalendar(currentYear, currentMonth);
+            });
+            
+            nextMonthBtn.addEventListener('click', function() {
+                if (currentMonth === 11) {
+                    currentMonth = 0;
+                    currentYear++;
+                } else {
+                    currentMonth++;
+                }
+                updateSelectors();
+                generateCalendar(currentYear, currentMonth);
+            });
+            
+            prevYearBtn.addEventListener('click', function() {
+                currentYear--;
+                updateSelectors();
+                generateCalendar(currentYear, currentMonth);
+            });
+            
+            nextYearBtn.addEventListener('click', function() {
+                currentYear++;
+                updateSelectors();
+                generateCalendar(currentYear, currentMonth);
+            });
+            
+            todayBtn.addEventListener('click', function() {
+                const today = new Date();
+                currentYear = today.getFullYear();
+                currentMonth = today.getMonth();
+                updateSelectors();
+                generateCalendar(currentYear, currentMonth);
+            });
+            
+            function updateSelectors() {
+                monthSelector.value = currentMonth;
+                yearSelector.value = currentYear;
+            }
+            
+            function generateCalendar(year, month) {
+                calendarDays.innerHTML = '';
+                
+                // First day of the month
+                const firstDay = new Date(year, month, 1);
+                // Last day of the month
+                const lastDay = new Date(year, month + 1, 0);
+                // Days in month
+                const daysInMonth = lastDay.getDate();
+                // Day of week for first day
+                const startingDay = firstDay.getDay();
+                
+                // Previous month days to show
+                const prevMonthLastDay = new Date(year, month, 0).getDate();
+                
+                // Next month days to show
+                let daysToShow = 42 - (startingDay + daysInMonth);
+                if (daysToShow < 0) {
+                    daysToShow += 7;
+                }
+                
+                // Today's date
+                const today = new Date();
+                const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+                
+                // Create calendar days
+                // Previous month days
+                for (let i = 0; i < startingDay; i++) {
+                    const day = prevMonthLastDay - startingDay + i + 1;
+                    createDayElement(year, month - 1, day, true);
+                }
+                
+                // Current month days
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const isToday = isCurrentMonth && day === today.getDate();
+                    createDayElement(year, month, day, false, isToday);
+                }
+                
+                // Next month days
+                for (let day = 1; day <= daysToShow; day++) {
+                    createDayElement(year, month + 1, day, true);
+                }
+                
+                // Update calendar title
+                document.querySelector('.calendar-title').textContent = 
+                    `${monthNames[month]} ${year}`;
+            }
+            
+            function createDayElement(year, month, day, isOtherMonth, isToday = false) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'day-cell';
+                
+                if (isOtherMonth) {
+                    dayElement.classList.add('other-month');
+                }
+                
+                if (isToday) {
+                    dayElement.classList.add('today');
+                }
+                
+                // Weekend styling
+                const date = new Date(year, month, day);
+                if (date.getDay() === 0 || date.getDay() === 6) {
+                    dayElement.classList.add('weekend');
+                }
+                
+                // Day number
+                const dayNumber = document.createElement('div');
+                dayNumber.className = 'day-number';
+                dayNumber.textContent = day;
+                dayElement.appendChild(dayNumber);
+                
+                // Check for holidays (basic implementation)
+                const holiday = checkForHoliday(date);
+                if (holiday) {
+                    const holidayElement = document.createElement('div');
+                    holidayElement.className = 'holiday';
+                    holidayElement.textContent = holiday;
+                    dayElement.appendChild(holidayElement);
+                }
+                
+                // Tooltip
+                const tooltip = document.createElement('div');
+                tooltip.className = 'tooltip';
+                tooltip.textContent = formatDate(date);
+                dayElement.appendChild(tooltip);
+                
+                // Click event for details
+                dayElement.addEventListener('click', function() {
+                    showDateDetails(date, holiday);
+                });
+                
+                calendarDays.appendChild(dayElement);
+            }
+            
+            function formatDate(date) {
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                return date.toLocaleDateString('en-US', options);
+            }
+            
+            function checkForHoliday(date) {
+                const month = date.getMonth();
+                const day = date.getDate();
+                const dayOfWeek = date.getDay();
+                const year = date.getFullYear();
+                
+                // Fixed date holidays
+                if (month === 0 && day === 1) return "Tahun baru";
+                if (month === 7 && day === 17) return "Hari Kemerdekaan";
+                if (month === 11 && day === 25) return "Hari Natal";
+                
+                // Floating holidays (US examples)
+                // Memorial Day - last Monday in May
+                if (month === 4 && dayOfWeek === 1) {
+                    const lastDay = new Date(year, month + 1, 0).getDate();
+                    if (day > lastDay - 7) return "Hari Peringatan";
+                }
+                
+                // Labor Day - first Monday in September
+                if (month === 8 && dayOfWeek === 1 && day <= 7) return "Hari Buruh";
+                
+                // Thanksgiving - fourth Thursday in November
+                if (month === 10 && dayOfWeek === 4) {
+                    const week = Math.floor((day - 1) / 7) + 1;
+                    if (week === 4) return "Thanksgiving";
+                }
+                
+                return null;
+            }
+            
+            function showDateDetails(date, holiday) {
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                const formattedDate = date.toLocaleDateString('en-US', options);
+                
+                detailsDate.textContent = formattedDate;
+                
+                let detailsHtml = '';
+                
+                // Julian Day Number (for historical date conversions)
+                const julianDay = Math.floor((date.getTime() / 86400000) + 2440587.5);
+                
+                detailsHtml += `<p><strong>Julian Day:</strong> ${julianDay}</p>`;
+                detailsHtml += `<p><strong>Day of Week:</strong> ${date.toLocaleDateString('en-US', { weekday: 'long' })}</p>`;
+                detailsHtml += `<p><strong>ISO Week Number:</strong> ${getISOWeekNumber(date)}</p>`;
+                
+                // Moon phase (approximate)
+                const moonPhase = calculateMoonPhase(date);
+                detailsHtml += `<p><strong>Moon Phase:</strong> ${moonPhase}</p>`;
+                
+                // Historical events from selected date
+                const historicalEvents = getHistoricalEvents(date);
+                if (historicalEvents.length > 0) {
+                    detailsHtml += `<div style="margin-top: 15px;"><strong>Historical Events:</strong><ul>`;
+                    historicalEvents.forEach(event => {
+                        detailsHtml += `<li>${event.year}: ${event.description}</li>`;
+                    });
+                    detailsHtml += `</ul></div>`;
+                }
+                
+                if (holiday) {
+                    detailsHtml = `<div class="holiday-info"><span class="holiday-marker"></span> <strong>${holiday}</strong></div>` + detailsHtml;
+                }
+                
+                detailsContent.innerHTML = detailsHtml;
+                detailsPanel.style.display = 'block';
+            }
+            
+            function getISOWeekNumber(date) {
+                // Helper function to calculate ISO week number
+                const tempDate = new Date(date.getTime());
+                tempDate.setHours(0, 0, 0, 0);
+                tempDate.setDate(tempDate.getDate() + 3 - (tempDate.getDay() + 6) % 7);
+                const firstThursday = tempDate;
+                const yearStart = new Date(tempDate.getFullYear(), 0, 1);
+                return 1 + Math.round(((firstThursday - yearStart) / 86400000 - 3 + (yearStart.getDay() + 6) % 7) / 7);
+            }
+            
+            function calculateMoonPhase(date) {
+                // Simplified moon phase calculation
+                const year = date.getFullYear();
+                const month = date.getMonth() + 1;
+                const day = date.getDate();
+                
+                let c = 0;
+                let e = 0;
+                let jd = 0;
+                let b = 0;
+                
+                if (month < 3) {
+                    year--;
+                    month += 12;
+                }
+                
+                month++;
+                
+                c = 365.25 * year;
+                e = 30.6 * month;
+                jd = c + e + day - 694039.09;
+                jd /= 29.5305882;
+                b = parseInt(jd);
+                jd -= b;
+                b = Math.round(jd * 8);
+                
+                if (b >= 8) b = 0;
+                
+                const moonPhases = ["New Moon", "Waxing Crescent", "First Quarter", "Waxing Gibbous", 
+                                  "Full Moon", "Waning Gibbous", "Last Quarter", "Waning Crescent"];
+                return moonPhases[b];
+            }
+            
+            function getHistoricalEvents(date) {
+                const day = date.getDate();
+                const month = date.getMonth() + 1;
+                const events = [];
+                
+                // Sample historical events database
+                const historicalEvents = {
+                    '8/6': [1945, "Atomic bombing of Hiroshima"],
+                    '8/9': [1945, "Atomic bombing of Nagasaki"],
+                    '8/15': [1945, "Japan surrenders, ending World War II"],
+                    '7/20': [1969, "Apollo 11 moon landing"],
+                    '11/9': [1989, "Fall of the Berlin Wall"],
+                    '9/11': [2001, "September 11 attacks"],
+                    '1/1': [2002, "Euro currency introduced"],
+                    '3/11': [2011, "Fukushima nuclear disaster"],
+                    '12/18': [2019, "First case of COVID-19 reported"],
+                };
+                
+                const key = `${month}/${day}`;
+                if (historicalEvents[key]) {
+                    events.push({
+                        year: historicalEvents[key][0],
+                        description: historicalEvents[key][1]
+                    });
+                }
+                
+                return events;
+            }
+        });
+    </script>
+</body>
+</html>
+
