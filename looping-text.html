@@ -1,0 +1,42 @@
+<style>
+    body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+        background-color: #000;
+        color: white;
+        font-family: Georgia, 'Times New Roman', Times, serif;
+    }
+    h2 > span {
+        position: relative;
+        display: inline-block;
+        color: red;
+        vertical-align: bottom;
+        overflow: hidden;
+        height: 1.1em; /* tinggi satu baris teks */
+    }
+    h2 > span > span {
+        display: block;
+        animation: anim 5s infinite ease;
+    }
+    @keyframes anim {
+        0% { transform: translateY(0%); }
+        25% { transform: translateY(-100%); }
+        50% { transform: translateY(-200%); }
+        75% { transform: translateY(-300%); }
+        100% { transform: translateY(0%); } /* kembali ke awal */
+    }
+</style>
+
+<h2>
+    I'm a
+    <span>
+        <span>Programmer</span>
+        <span>Designer</span>
+        <span>Gamer</span>
+        <span>Developer</span>
+    </span>
+</h2>
