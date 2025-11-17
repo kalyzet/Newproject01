@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengelola Tugas Akademik</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --secondary: #f8fafc;
+            --accent: #f59e0b;
+            --dark: #1e293b;
+        }
+        
+        .priority-high {
+            border-left: 4px solid #ef4444;
+        }
+        
+        .priority-medium {
+            border-left: 4px solid #f59e0b;
+        }
+        
+        .priority-low {
+            border-left: 4px solid #10b981;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+        }
+        
+        .slide-fade-enter-active,
+        .slide-fade-leave-active {
+            transition: all 0.3s ease;
+        }
+        
+        .slide-fade-enter-from,
+        .slide-fade-leave-to {
+            transform: translateX(20px);
+            opacity: 0;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+    <div id="app" class="max-w-6xl mx-auto px-4 py-8">
+        <header class="gradient-bg text-white rounded-t-2xl shadow-lg">
+            <div class="container mx-auto px-6 py-8 flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold">Pengelola Tugas Akademik</h1>
+                    <p class="text-indigo-100 mt-1">Tetap fokus pada tugas kuliah dan deadline kamu!</p>
+                </div>
+                <div class="hidden md:block">
+                    <img src="polihasnur.png" alt="University building icon with graduation cap symbol in the background" class="w-20 h-20 rounded-full border-4 border-white" style="background-color: white;">
+                </div>
+            </div>
+        </header>
+
+        <main class="bg-white rounded-b-2xl shadow-lg p-6">
+            <!-- Task Input Form -->
+            <div class="bg-gray-50 rounded-lg p-4 mb-8 border border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Tambahkan Tugas Baru</h2>
+                <form @submit.prevent="addTask" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div>
+                        <label for="taskName" class="block text-sm font-medium text-gray-700 mb-1">Nama Tugas</label>
+                        <input type="text" id="taskName" v-model="newTask.taskName" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label for="courseName" class="block text-sm font-medium text-gray-700 mb-1">Nama Matkul</label>
+                        <input type="text" id="courseName" v-model="newTask.courseName" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label for="lecturer" class="block text-sm font-medium text-gray-700 mb-1">Dosen</label>
+                        <input type="text" id="lecturer" v-model="newTask.lecturer"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label for="deadline" class="block text-sm font-medium text-gray-700 mb-1">Deadline</label>
+                        <input type="datetime-local" id="deadline" v-model="newTask.deadline" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div class="flex items-end">
+                        <button type="submit"
+                            class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 w-full flex items-center justify-center">
+                            <i class="fas fa-plus mr-2"></i> Tambah Tugas
+                        </button>
+                    </div>
+                </form>
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label for="priority" class="block text-sm font-medium text-gray-700 mb-1">Prioritas</label>
+                        <select id="priority" v-model="newTask.priority"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="low">Biasa</option>
+                            <option value="medium" selected>Penting</option>
+                            <option value="high">Penting Banget</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
+                        <select id="category" v-model="newTask.category"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="assignment">Tugas</option>
+                            <option value="exam">Ujian</option>
+                            <option value="project">Projek</option>
+                            <option value="lecture">Presentasi</option>
+                            <option value="other">Lainnya</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="hasReminder" v-model="newTask.hasReminder"
+                            class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                        <label for="hasReminder" class="ml-2 block text-sm text-gray-700">Atur Pengingat</label>
+                    </div>
+                    <div v-if="newTask.hasReminder">
+                        <label for="reminderTime" class="block text-sm font-medium text-gray-700 mb-1">Pengingat Sebelumnya</label>
+                        <div class="flex">
+                            <input type="number" id="reminderTime" v-model="newTask.reminderTime" min="1" max="24" class="w-16 px-2 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <select v-model="newTask.reminderUnit" class="px-2 py-2 border-t border-b border-r border-gray-300 rounded-r-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="hours">Jam</option>
+                                <option value="days">Hari</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Filters -->
+            <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div class="flex-1">
+                    <input type="text" v-model="searchQuery" placeholder="Cari Tugas..."
+                        class="w-full md:w-80 px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="flex items-center space-x-2">
+                    <label class="text-sm text-gray-700">Filter Berdasarkan:</label>
+                    <select v-model="filterPriority" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="all">Semua Prioritas</option>
+                        <option value="high">Penting Banget</option>
+                        <option value="medium">Penting</option>
+                        <option value="low">Biasa</option>
+                    </select>
+                    <select v-model="filterCategory" class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="all">Semua Kategori</option>
+                        <option value="assignment">Tugas</option>
+                        <option value="exam">Ujian</option>
+                        <option value="project">Projek</option>
+                        <option value="lecture">Presentasi</option>
+                        <option value="other">Lainnya</option>
+                    </select>
+                    <button @click="resetFilters" class="text-indigo-600 hover:text-indigo-800 text-sm">Reset</button>
+                </div>
+            </div>
+
+            <!-- Tasks Summary -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-blue-50 border border-blue-100 rounded-lg p-4 flex items-center">
+                    <div class="bg-blue-100 p-3 rounded-full mr-4">
+                        <i class="fas fa-tasks text-blue-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-blue-800">Total Tugas</h3>
+                        <p class="text-2xl font-bold text-blue-600">{{ filteredTasks.length }}</p>
+                    </div>
+                </div>
+                <div class="bg-yellow-50 border border-yellow-100 rounded-lg p-4 flex items-center">
+                    <div class="bg-yellow-100 p-3 rounded-full mr-4">
+                        <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-yellow-800">Tertunda</h3>
+                        <p class="text-2xl font-bold text-yellow-600">{{ pendingTasksCount }}</p>
+                    </div>
+                </div>
+                <div class="bg-red-50 border border-red-100 rounded-lg p-4 flex items-center">
+                    <div class="bg-red-100 p-3 rounded-full mr-4">
+                        <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-red-800">Segera Berakhir</h3>
+                        <p class="text-2xl font-bold text-red-600">{{ dueSoonTasksCount }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tasks List -->
+            <div class="bg-white rounded-lg overflow-hidden shadow">
+                <transition-group name="slide-fade" tag="div">
+                    <div v-for="(task, index) in filteredTasks" :key="task.id"
+                        :class="['task-item p-4 border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150', `priority-${task.priority}`, { 'bg-yellow-50': daysUntilDeadline(task.deadline) <= 1 && daysUntilDeadline(task.deadline) >= 0, 'bg-red-50': daysUntilDeadline(task.deadline) < 0 }]">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-start space-x-3">
+                                    <button @click="toggleTaskCompletion(task)"
+                                        :class="['flex-shrink-0 h-5 w-5 rounded border mt-1 flex items-center justify-center', task.completed ? 'bg-green-500 border-green-600' : 'border-gray-300 hover:border-indigo-500']">
+                                        <i v-if="task.completed" class="fas fa-check text-white text-xs"></i>
+                                    </button>
+                                    <div>
+                                        <h3 :class="['font-medium text-gray-900', { 'line-through text-gray-500': task.completed }]">
+                                            {{ task.taskName }}
+                                        </h3>
+                                        <div class="flex flex-wrap items-center text-sm text-gray-500 gap-2 mt-1">
+                                            <span><i class="fas fa-book text-indigo-500 mr-1"></i> {{ task.courseName }}</span>
+                                            <span><i class="fas fa-user-tie text-purple-500 mr-1"></i> {{ task.lecturer }}</span>
+                                            <span><i class="fas fa-tag text-blue-500 mr-1"></i> {{ { assignment: 'Tugas', exam: 'Ujian', project: 'Projek', lecture: 'Presentasi', other: 'Lainnya' }[task.category] }}</span>
+                                            <span :class="{ 'text-red-500 font-medium': daysUntilDeadline(task.deadline) < 0 }">
+                                                <i class="fas fa-calendar-alt mr-1" :class="{ 'text-red-500': daysUntilDeadline(task.deadline) < 0 }"></i>
+                                                {{ formatDate(task.deadline) }}
+                                                <span v-if="daysUntilDeadline(task.deadline) < 0" class="ml-1">(Overdue!)</span>
+                                                <span v-else-if="daysUntilDeadline(task.deadline) <= 1" class="ml-1">
+                                                    (Due in {{ formatTimeRemaining(task.deadline) }})
+                                                </span>
+                                            </span>
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" :class="{
+                                                'bg-green-100 text-green-800': task.priority === 'low',
+                                                'bg-yellow-100 text-yellow-800': task.priority === 'medium',
+                                                'bg-red-100 text-red-800': task.priority === 'high'
+                                            }">
+                                                {{ { low: 'Biasa', medium: 'Penting', high: 'Penting Banget' }[task.priority] }}
+                                            </span>
+                                            <span v-if="task.hasReminder" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                                                <i class="fas fa-bell mr-1"></i> Reminder set
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div v-if="task.completed" class="mt-2 text-sm text-gray-500">
+                                    Selesai pada {{ formatDate(task.completedOn) }}
+                                </div>
+                            </div>
+                            <div class="flex space-x-2 mt-3 md:mt-0 md:ml-4">
+                                <button @click="editTask(task.id)" class="text-indigo-600 hover:text-indigo-900 p-1">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button @click="deleteTask(task.id)" class="text-red-600 hover:text-red-900 p-1">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </transition-group>
+                <div v-if="filteredTasks.length === 0" class="p-8 text-center text-gray-500">
+                    <i class="fas fa-tasks text-4xl mb-2 text-gray-300"></i>
+                    <p class="text-lg">Tidak Ada Tugas</p>
+                    <p v-if="activeFilters">Coba Sesuaikan Filter</p>
+                </div>
+            </div>
+        </main>
+
+        <div v-if="showNotification" class="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg flex items-center">
+            <i class="fas fa-check-circle mr-2"></i>
+            {{ notificationMessage }}
+        </div>
+
+        <!-- Edit Task Modal -->
+        <div v-if="isEditing" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-md">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">Edit Tugas</h3>
+                </div>
+                <div class="px-6 py-4">
+                    <div class="mb-4">
+                        <label for="editTaskName" class="block text-sm font-medium text-gray-700 mb-1">Nama Tugas</label>
+                        <input type="text" id="editTaskName" v-model="editTaskData.taskName" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div class="mb-4">
+                        <label for="editCourseName" class="block text-sm font-medium text-gray-700 mb-1">Nama Matkul</label>
+                        <input type="text" id="editCourseName" v-model="editTaskData.courseName" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div class="mb-4">
+                        <label for="editLecturer" class="block text-sm font-medium text-gray-700 mb-1">Dosen</label>
+                        <input type="text" id="editLecturer" v-model="editTaskData.lecturer"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label for="editDeadline" class="block text-sm font-medium text-gray-700 mb-1">Deadline</label>
+                            <input type="datetime-local" id="editDeadline" v-model="editTaskData.deadline" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label for="editPriority" class="block text-sm font-medium text-gray-700 mb-1">Prioritas</label>
+                            <select id="editPriority" v-model="editTaskData.priority"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="low">Biasa</option>
+                                <option value="medium">Penting</option>
+                                <option value="high">Penting Banget</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label for="editCategory" class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
+                            <select id="editCategory" v-model="editTaskData.category"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="assignment">Tugas</option>
+                                <option value="exam">Ujian</option>
+                                <option value="project">Projek</option>
+                                <option value="lecture">Presentasi</option>
+                                <option value="other">Lainnya</option>
+                            </select>
+                        </div>
+                        <div class="flex flex-col justify-end">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="editHasReminder" v-model="editTaskData.hasReminder"
+                                    class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                                <label for="editHasReminder" class="ml-2 block text-sm text-gray-700">Atur Pengingat</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-if="editTaskData.hasReminder" class="mb-4">
+                        <label for="editReminderTime" class="block text-sm font-medium text-gray-700 mb-1">Pengingat Sebelumnya</label>
+                        <div class="flex">
+                            <input type="number" id="editReminderTime" v-model="editTaskData.reminderTime" min="1" max="24" class="w-16 px-2 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <select v-model="editTaskData.reminderUnit" class="px-2 py-2 border-t border-b border-r border-gray-300 rounded-r-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="hours">Jam</option>
+                                <option value="days">Hari</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+                    <button @click="cancelEdit" type="button"
+                        class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Batal
+                    </button>
+                    <button @click="saveEdit" type="button"
+                        class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.47/dist/vue.global.min.js"></script>
+    <script>
+        const { createApp, ref, computed, onMounted, watch } = Vue;
+
+        createApp({
+            setup() {
+                // Sample initial tasks
+                const tasks = ref([
+                    {
+                        id: 1,
+                        taskName: 'Math Homework',
+                        courseName: 'Calculus 101',
+                        lecturer: 'Dr. Smith',
+                        deadline: new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 16),
+                        priority: 'high',
+                        category: 'assignment',
+                        completed: false,
+                        hasReminder: true,
+                        reminderTime: 2,
+                        reminderUnit: 'hours'
+                    },
+                    {
+                        id: 2,
+                        taskName: 'Literature Essay',
+                        courseName: 'English Literature',
+                        lecturer: 'Prof. Johnson',
+                        deadline: new Date(Date.now() + 86400000 * 5).toISOString().slice(0, 16),
+                        priority: 'medium',
+                        category: 'project',
+                        completed: false,
+                        hasReminder: true,
+                        reminderTime: 1,
+                        reminderUnit: 'days'
+                    },
+                    {
+                        id: 3,
+                        taskName: 'Study for Midterm',
+                        courseName: 'Computer Science',
+                        lecturer: 'Dr. Lee',
+                        deadline: new Date(Date.now() + 86400000 * 7).toISOString().slice(0, 16),
+                        priority: 'high',
+                        category: 'exam',
+                        completed: false,
+                        hasReminder: false
+                    }
+                ]);
+
+                // New task form data
+                const newTask = ref({
+                    taskName: '',
+                    courseName: '',
+                    lecturer: '',
+                    deadline: new Date(Date.now() + 86400000).toISOString().slice(0, 16),
+                    priority: 'medium',
+                    category: 'assignment',
+                    completed: false,
+                    hasReminder: false,
+                    reminderTime: 1,
+                    reminderUnit: 'hours'
+                });
+
+                // Edit task data
+                const editTaskData = ref({
+                    id: null,
+                    taskName: '',
+                    courseName: '',
+                    lecturer: '',
+                    deadline: '',
+                    priority: 'medium',
+                    category: 'assignment',
+                    completed: false,
+                    hasReminder: false,
+                    reminderTime: 1,
+                    reminderUnit: 'hours',
+                    index: null
+                });
+
+                const isEditing = ref(false);
+                const showNotification = ref(false);
+                const notificationMessage = ref('');
+                const searchQuery = ref('');
+                const filterPriority = ref('all');
+                const filterCategory = ref('all');
+
+                // Computed properties
+                const filteredTasks = computed(() => {
+                    return tasks.value.filter(task => {
+                        const matchesSearch = task.taskName.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
+                                            task.courseName.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+                                            task.lecturer.toLowerCase().includes(searchQuery.value.toLowerCase());
+                        const matchesPriority = filterPriority.value === 'all' || task.priority === filterPriority.value;
+                        const matchesCategory = filterCategory.value === 'all' || task.category === filterCategory.value;
+                        return matchesSearch && matchesPriority && matchesCategory;
+                    }).sort((a, b) => {
+                        // Sort by completion status (uncompleted first)
+                        if (a.completed !== b.completed) {
+                            return a.completed ? 1 : -1;
+                        }
+                        // Then by priority (high to low)
+                        const priorityOrder = { high: 1, medium: 2, low: 3 };
+                        if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
+                            return priorityOrder[a.priority] - priorityOrder[b.priority];
+                        }
+                        // Then by deadline (earliest first)
+                        return new Date(a.deadline) - new Date(b.deadline);
+                    });
+                });
+
+                const pendingTasksCount = computed(() => {
+                    return tasks.value.filter(task => !task.completed).length;
+                });
+
+                const dueSoonTasksCount = computed(() => {
+                    return tasks.value.filter(task => !task.completed && daysUntilDeadline(task.deadline) < 24).length;
+                });
+
+                const activeFilters = computed(() => {
+                    return filterPriority.value !== 'all' || filterCategory.value !== 'all' || searchQuery.value !== '';
+                });
+
+                // Methods
+                function addTask() {
+                    const task = {
+                        id: Date.now(),
+                        ...newTask.value,
+                        completed: false,
+                        completedOn: null
+                    };
+                    tasks.value.push(task);
+                    showNotification.value = true;
+                    notificationMessage.value = 'Tugas berhasil ditambahkan!';
+
+                    // Schedule reminder if needed
+                    if (task.hasReminder) {
+                        scheduleReminder(task);
+                    }
+
+                    // Reset form
+                    newTask.value = {
+                        taskName: '',
+                        courseName: '',
+                        lecturer: '',
+                        deadline: new Date(Date.now() + 86400000).toISOString().slice(0, 16),
+                        priority: 'medium',
+                        category: 'assignment',
+                        completed: false,
+                        hasReminder: false,
+                        reminderTime: 1,
+                        reminderUnit: 'hours'
+                    };
+
+                    setTimeout(() => {
+                        showNotification.value = false;
+                    }, 3000);
+                }
+
+                function deleteTask(id) {
+                   const index = tasks.value.findIndex(t => t.id === id);
+                   if (index !== -1) {
+                       tasks.value.splice(index, 1);
+                       showNotification.value = true;
+                       notificationMessage.value = 'Tugas berhasil dihapus!';
+                          setTimeout(() => {
+                              showNotification.value = false;
+                          }, 3000);
+                       }
+                    }
+
+                function editTask(id) {
+                    const index = tasks.value.findIndex(t => t.id === id);
+                    if (index === -1) return;
+
+                        const task = tasks.value[index];
+                        editTaskData.value = {
+                        id: task.id,
+                        taskName: task.taskName,
+                        courseName: task.courseName,
+                        lecturer: task.lecturer,
+                        deadline: task.deadline,
+                        priority: task.priority,
+                        category: task.category,
+                        completed: task.completed,
+                        hasReminder: task.hasReminder || false,
+                        reminderTime: task.reminderTime || 1,
+                        reminderUnit: task.reminderUnit || 'hours',
+                        index
+                    };
+                    isEditing.value = true;
+                }
+
+                function saveEdit() {
+                    const index = editTaskData.value.index;
+                    tasks.value[index] = {
+                        id: editTaskData.value.id,
+                        taskName: editTaskData.value.taskName,
+                        courseName: editTaskData.value.courseName,
+                        lecturer: editTaskData.value.lecturer,
+                        deadline: editTaskData.value.deadline,
+                        priority: editTaskData.value.priority,
+                        category: editTaskData.value.category,
+                        completed: editTaskData.value.completed,
+                        hasReminder: editTaskData.value.hasReminder,
+                        reminderTime: editTaskData.value.reminderTime,
+                        reminderUnit: editTaskData.value.reminderUnit,
+                        completedOn: tasks.value[index].completedOn
+                    };
+
+                    // Re-schedule reminder if needed
+                    if (editTaskData.value.hasReminder) {
+                        scheduleReminder(tasks.value[index]);
+                    }
+
+                    showNotification.value = true;
+                    notificationMessage.value = 'Tugas berhasil diperbarui!';
+                    isEditing.value = false;
+
+                    setTimeout(() => {
+                        showNotification.value = false;
+                    }, 3000);
+                }
+
+                function cancelEdit() {
+                    isEditing.value = false;
+                }
+
+                function toggleTaskCompletion(task) {
+                    task.completed = !task.completed;
+                    task.completedOn = task.completed ? new Date().toISOString() : null;
+                }
+
+                function resetFilters() {
+                    searchQuery.value = '';
+                    filterPriority.value = 'all';
+                    filterCategory.value = 'all';
+                }
+
+                function formatDate(dateString) {
+                    if (!dateString) return 'No deadline';
+                    const date = new Date(dateString);
+                    return date.toLocaleString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                }
+
+                function daysUntilDeadline(dateString) {
+                    if (!dateString) return Infinity;
+                    const deadline = new Date(dateString);
+                    const now = new Date();
+                    return (deadline - now) / (1000 * 60 * 60); // hours until deadline
+                }
+
+                function formatTimeRemaining(dateString) {
+                    if (!dateString) return '';
+                    const hours = daysUntilDeadline(dateString);
+                    if (hours < 1) {
+                        const minutes = Math.floor(hours * 60);
+                        return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+                    } else if (hours < 24) {
+                        const roundedHours = Math.floor(hours);
+                        return `${roundedHours} hour${roundedHours !== 1 ? 's' : ''}`;
+                    } else {
+                        const days = Math.floor(hours / 24);
+                        return `${days} day${days !== 1 ? 's' : ''}`;
+                    }
+                }
+
+                function scheduleReminder(task) {
+                    // In a real implementation, this would use the Notification API
+                    // Here we just log to console for demo purposes
+                    const deadline = new Date(task.deadline);
+                    let reminderTime;
+
+                    if (task.reminderUnit === 'hours') {
+                        reminderTime = new Date(deadline.getTime() - task.reminderTime * 60 * 60 * 1000);
+                    } else {
+                        reminderTime = new Date(deadline.getTime() - task.reminderTime * 24 * 60 * 60 * 1000);
+                    }
+
+                    console.log(`Reminder for "${task.taskName}" scheduled for ${reminderTime.toLocaleString()}`);
+                }
+
+                function checkForUpcomingDeadlines() {
+                    tasks.value.forEach(task => {
+                        if (!task.completed && daysUntilDeadline(task.deadline) < 24) {
+                            console.log(`Task "${task.taskName}" is due soon!`);
+                        }
+                    });
+                }
+
+                // Initialize
+                onMounted(() => {
+                const savedTasks = localStorage.getItem('tasks');
+                if (savedTasks) {
+                   tasks.value = JSON.parse(savedTasks);
+                }
+                    // Set up interval to check for upcoming deadlines every minute
+                    setInterval(checkForUpcomingDeadlines, 60000);
+                });
+
+                watch(tasks, (newTasks) => {
+                   localStorage.setItem('tasks', JSON.stringify(newTasks));
+                }, { deep: true });
+
+
+                return {
+                    tasks,
+                    newTask,
+                    editTaskData,
+                    isEditing,
+                    showNotification,
+                    notificationMessage,
+                    searchQuery,
+                    filterPriority,
+                    filterCategory,
+                    filteredTasks,
+                    pendingTasksCount,
+                    dueSoonTasksCount,
+                    activeFilters,
+                    addTask,
+                    deleteTask,
+                    editTask,
+                    saveEdit,
+                    cancelEdit,
+                    toggleTaskCompletion,
+                    resetFilters,
+                    formatDate,
+                    daysUntilDeadline,
+                    formatTimeRemaining
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
+
