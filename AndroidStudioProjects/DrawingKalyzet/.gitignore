@@ -1,0 +1,50 @@
+# Gradle
+.gradle/
+build/
+
+# Local configuration
+local.properties
+*.iml
+
+# Android Studio
+.idea/
+.idea/caches
+.idea/libraries
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+
+# Logs
+*.log
+
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Android/IntelliJ specific
+captures/
+.externalNativeBuild
+.cxx
+
+# Build output
+*.apk
+*.ap_
+*.aab
+*.jar
+*.war
+*.ear
+
+# Keystore files
+*.jks
+*.keystore
+
+# NDK / CMake
+obj/
+*.so
+
+# Others
+*.orig
+*.rej

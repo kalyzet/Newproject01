@@ -1,0 +1,19 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Base Theme -->
+    <style name="Base.Theme.DrawingKalyzet" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Matikan tint Material3 -->
+        <item name="colorPrimary">@android:color/transparent</item>
+        <item name="materialButtonStyle">@style/NoTintButton</item>
+    </style>
+
+    <!-- Style Button Tanpa Tint -->
+    <style name="NoTintButton" parent="@style/Widget.Material3.Button">
+        <item name="backgroundTint">@null</item>
+        <item name="rippleColor">@android:color/transparent</item>
+    </style>
+
+    <!-- Final Theme -->
+    <style name="Theme.DrawingKalyzet" parent="Base.Theme.DrawingKalyzet" />
+
+</resources>
