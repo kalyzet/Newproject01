@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="id">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Coin Converter</title>
+        <style>
+            * {
+                box-sizing: border-box;
+                font-family: 'Segoe UI', sans-serif;
+            }
+
+            body {
+                margin: 0;
+                height: 100vh;
+                background: linear-gradient(180deg, #2fb7e6, #cfefff);
+                padding: 30px;
+            }
+
+            .top-bar {
+                display: flex;
+                justify-content: space-between;
+            }
+
+            .balances {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .balance-box {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                background: white;
+                padding: 12px 20px;
+                border-radius: 12px;
+                min-width: 260px;
+                font-size: 28px;
+                font-weight: bold;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
+
+            .balance-box img {
+                width: 36px;
+            }
+
+            .right-top {
+                width: 120px;
+                height: 130px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+            }
+
+            .claim-btn {
+                border: none;
+                background: white;
+                padding: 14px 22px;
+                border-radius: 50%;
+                font-weight: bold;
+                cursor: pointer;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            }
+
+            .timer {
+                height: 26px;
+                line-height: 26px;
+                font-size: 22px;
+                font-weight: bold;
+                text-align: center;
+            }
+
+            .converter {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 25px;
+                margin-top: 160px;
+            }
+
+            .converter input {
+                width: 420px;
+                padding: 18px;
+                font-size: 20px;
+                border-radius: 10px;
+                border: 2px solid #333;
+            }
+
+            .equals {
+                font-size: 50px;
+                font-weight: bold;
+            }
+
+            .convert-btn {
+                display: block;
+                margin: 60px auto 0;
+                padding: 18px 60px;
+                font-size: 22px;
+                font-weight: bold;
+                background: #8ef3ff;
+                border: none;
+                border-radius: 30px;
+                cursor: pointer;
+                box-shadow: 0 6px 0 #6ad9e6;
+            }
+
+            .convert-btn:active {
+                transform: translateY(4px);
+                box-shadow: 0 2px 0 #6ad9e6;
+            }
+
+            .modal {
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.4);
+                display: none;
+                justify-content: center;
+                align-items: center;
+                z-index: 999;
+            }
+
+            .modal.active {
+                display: flex;
+            }
+
+            .modal-box {
+                background: white;
+                padding: 30px;
+                border-radius: 16px;
+                width: 360px;
+                text-align: center;
+                animation: pop 0.25s ease;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+            }
+
+            .modal-box h3 {
+                margin: 0;
+                color: #0b4da2;
+            }
+
+            .modal-box p {
+                margin: 15px 0 25px;
+                font-size: 16px;
+            }
+
+            .modal-box button {
+                padding: 12px 30px;
+                border-radius: 25px;
+                border: none;
+                background: linear-gradient(135deg, #2196f3, #64b5f6);
+                color: white;
+                font-size: 16px;
+                cursor: pointer;
+            }
+
+            @keyframes pop {
+                from {
+                    transform: scale(0.85);
+                    opacity: 0;
+                }
+                to {
+                    transform: scale(1);
+                    opacity: 1;
+                }
+            }
+            button:focus,
+            input:focus {
+                outline: none;
+                box-shadow: none;
+            }
+            .claim-btn {
+                width: 80px;
+                height: 80px;
+                border-radius: 50%;
+                border: none;
+                padding: 0;
+                background: #ffffff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+
+                box-sizing: border-box;
+                transition: background 0.3s ease;
+            }
+
+            .claim-btn img {
+                width: 100%;
+                height: 100%;
+                border-radius: 50%;
+                object-fit: cover;
+                pointer-events: none;
+            }
+
+            .claim-btn.active {
+                background: linear-gradient(135deg, #fff3b0, #ffd000);
+                box-shadow: 0 0 0 6px rgba(255, 208, 0, 0.35), 0 0 30px rgba(255, 208, 0, 0.9);
+                animation: glowYellow 1.6s infinite;
+            }
+
+            .claim-btn.disabled {
+                filter: grayscale(0.6) brightness(0.9);
+                box-shadow: none;
+                animation: none;
+                cursor: not-allowed;
+            }
+
+            @keyframes glowYellow {
+                0% {
+                    box-shadow: 0 0 0 6px rgba(255, 208, 0, 0.35), 0 0 30px rgba(255, 208, 0, 0.9);
+                }
+                70% {
+                    box-shadow: 0 0 0 14px rgba(255, 208, 0, 0), 0 0 40px rgba(255, 208, 0, 1);
+                }
+                100% {
+                    box-shadow: 0 0 0 6px rgba(255, 208, 0, 0.35), 0 0 30px rgba(255, 208, 0, 0.9);
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="top-bar">
+            <div class="balances">
+                <div class="balance-box">
+                    <img src="bp.png" />
+                    <span id="coinSaldo">0</span>
+                </div>
+                <div class="balance-box">
+                    <img src="mny.jpg" />
+                    <span>Rp <span id="rupiahSaldo">0</span></span>
+                </div>
+            </div>
+
+            <div class="right-top">
+                <button class="claim-btn" onclick="claimCoin()">
+                    <img src="rp.png" alt="profile" />
+                </button>
+                <div class="timer" id="timerText">Klaim Sekarang</div>
+            </div>
+        </div>
+
+        <div class="converter">
+            <input type="number" id="coinInput" placeholder="MASUKKAN NILAI KOIN..." />
+            <span class="equals">=</span>
+            <input type="text" id="rupiahOutput" placeholder="Rp" readonly />
+        </div>
+
+        <button class="convert-btn" onclick="convertCoin()">KONVERSI</button>
+
+        <div class="modal" id="modal">
+            <div class="modal-box">
+                <h3 id="modalTitle"></h3>
+                <p id="modalMessage"></p>
+                <button onclick="closeModal()">OK</button>
+            </div>
+        </div>
+
+        <script>
+            let coinSaldo = 0;
+            let rupiahSaldo = 0;
+
+            const CLAIM_REWARD = 1000;
+            const COOLDOWN = 30 * 60;
+
+            let remainingTime = 0;
+            let timerInterval = null;
+
+            document.getElementById('coinInput').addEventListener('input', () => {
+                const coin = parseInt(document.getElementById('coinInput').value);
+                const rupiahPreview = document.getElementById('rupiahOutput');
+
+                if (isNaN(coin) || coin <= 0) {
+                    rupiahPreview.value = '';
+                } else {
+                    rupiahPreview.value = 'Rp ' + coin;
+                }
+            });
+
+            window.onload = () => {
+                remainingTime = 0;
+                updateTimer();
+            };
+
+            function startTimer() {
+                clearInterval(timerInterval);
+                timerInterval = setInterval(() => {
+                    remainingTime--;
+                    if (remainingTime <= 0) {
+                        clearInterval(timerInterval);
+                        remainingTime = 0;
+                    }
+                    updateTimer();
+                }, 1000);
+            }
+
+            function updateTimer() {
+                const el = document.getElementById('timerText');
+                const btn = document.querySelector('.claim-btn');
+
+                if (remainingTime === 0) {
+                    el.textContent = 'Klaim Sekarang';
+                    btn.classList.add('active');
+                    btn.classList.remove('disabled');
+                } else {
+                    let m = Math.floor(remainingTime / 60);
+                    let s = remainingTime % 60;
+                    el.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+                    btn.classList.remove('active');
+                    btn.classList.add('disabled');
+                }
+            }
+
+            function claimCoin() {
+                if (remainingTime > 0) return;
+
+                coinSaldo += CLAIM_REWARD;
+                document.getElementById('coinSaldo').textContent = coinSaldo;
+
+                remainingTime = COOLDOWN;
+                updateTimer();
+                startTimer();
+
+                showModal('Berhasil 🎉', '+1000 Battle Point Berhasil Diklaim!');
+            }
+
+            function convertCoin() {
+                const coin = parseInt(document.getElementById('coinInput').value);
+                const out = document.getElementById('rupiahOutput');
+
+                if (isNaN(coin) || coin <= 0)
+                    return showModal('Gagal ❌', 'Masukkan Jumlah Battle Point<br>Dengan Benar');
+
+                if (coin > coinSaldo)
+                    return showModal('Saldo Kurang ❌', 'Battle Point Kamu Tidak Cukup');
+
+                coinSaldo -= coin;
+                rupiahSaldo += coin;
+
+                document.getElementById('coinSaldo').textContent = coinSaldo;
+                document.getElementById('rupiahSaldo').textContent = rupiahSaldo;
+
+                document.getElementById('coinInput').value = '';
+                out.value = '';
+
+                showModal(
+                    'Sukses ✅',
+                    `Berhasil Mengonversi ${coin} Battle Point<br>Ke Saldo DANA`,
+                );
+            }
+
+            function showModal(title, message) {
+                document.getElementById('modalTitle').textContent = title;
+                document.getElementById('modalMessage').innerHTML = message;
+                document.getElementById('modal').classList.add('active');
+            }
+
+            function closeModal() {
+                document.getElementById('modal').classList.remove('active');
+            }
+        </script>
+    </body>
+</html>
