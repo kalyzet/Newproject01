@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="id">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Game Adu Penalti 2D</title>
+        <style>
+            /* --- 1. CSS (Tampilan) --- */
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                background-color: #2c3e50;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                margin: 0;
+                overflow: hidden;
+                color: white;
+            }
+
+            h1 {
+                margin-bottom: 10px;
+            }
+
+            #scoreboard {
+                background: rgba(0, 0, 0, 0.5);
+                padding: 10px 20px;
+                border-radius: 10px;
+                font-size: 1.2rem;
+                margin-bottom: 20px;
+                display: flex;
+                gap: 20px;
+            }
+
+            /* Area Rumput/Lapangan */
+            .game-container {
+                position: relative;
+                width: 600px;
+                height: 400px;
+                background: linear-gradient(to bottom, #27ae60 0%, #2ecc71 100%);
+                border: 5px solid #fff;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+                perspective: 800px; /* Memberikan efek kedalaman */
+            }
+
+            /* Tiang Gawang */
+            .goal-post {
+                position: absolute;
+                top: 50px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 300px;
+                height: 150px;
+                border-top: 10px solid #ecf0f1;
+                border-left: 10px solid #ecf0f1;
+                border-right: 10px solid #ecf0f1;
+                background: rgba(0, 0, 0, 0.1); /* Jaring samar */
+                z-index: 1;
+                cursor: crosshair; /* Kursor target saat di gawang */
+            }
+
+            /* Kiper */
+            #goalkeeper {
+                position: absolute;
+                bottom: 0;
+                left: 50%; /* Mulai di tengah gawang */
+                width: 60px;
+                height: 100px;
+                background-color: #e74c3c; /* Baju Merah */
+                transform: translateX(-50%);
+                border-radius: 10px 10px 0 0;
+                transition: all 0.5s ease-out; /* Animasi gerakan */
+                z-index: 2;
+                box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+            }
+
+            /* Tambahan visual tangan kiper */
+            #goalkeeper::before,
+            #goalkeeper::after {
+                content: '';
+                position: absolute;
+                top: 30px;
+                width: 15px;
+                height: 40px;
+                background: #c0392b;
+                border-radius: 5px;
+            }
+            #goalkeeper::before {
+                left: -10px;
+                transform: rotate(20deg);
+            }
+            #goalkeeper::after {
+                right: -10px;
+                transform: rotate(-20deg);
+            }
+
+            /* Bola */
+            #ball {
+                position: absolute;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 40px;
+                height: 40px;
+                background: radial-gradient(circle at 10px 10px, #ffffff, #bdc3c7);
+                border-radius: 50%;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+                z-index: 3;
+                transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+                pointer-events: none; /* Agar klik tembus ke gawang */
+            }
+
+            /* Pola Bola */
+            #ball::after {
+                content: '⚽';
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                height: 100%;
+                font-size: 26px;
+                color: #2c3e50;
+                opacity: 0.8;
+            }
+
+            /* Garis Lapangan */
+            .penalty-spot {
+                position: absolute;
+                bottom: 30px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 10px;
+                height: 10px;
+                background: white;
+                border-radius: 50%;
+                opacity: 0.7;
+            }
+
+            /* Pesan Status (Gol/Tidak) */
+            #message {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) scale(0);
+                font-size: 3rem;
+                font-weight: bold;
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+                z-index: 10;
+                transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                pointer-events: none;
+            }
+
+            .show-msg {
+                transform: translate(-50%, -50%) scale(1) !important;
+            }
+            .text-goal {
+                color: #f1c40f;
+            }
+            .text-miss {
+                color: #e74c3c;
+            }
+
+            button {
+                margin-top: 20px;
+                padding: 10px 20px;
+                font-size: 1rem;
+                background-color: #3498db;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+            }
+            button:hover {
+                background-color: #2980b9;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Penalty Shootout 2D</h1>
+
+        <div id="scoreboard">
+            <span id="score">Skor: 0</span>
+            <span id="attempts">Tendangan: 0</span>
+        </div>
+
+        <div class="game-container" id="gameArea">
+            <div id="message">GOAL!</div>
+
+            <div class="goal-post" id="goalPost">
+                <div id="goalkeeper"></div>
+            </div>
+
+            <div class="penalty-spot"></div>
+
+            <div id="ball"></div>
+        </div>
+
+        <p style="opacity: 0.8">Klik pada area dalam gawang untuk menendang!</p>
+        <button onclick="resetGame()">Reset Game</button>
+
+        <script>
+            /* --- 2. JavaScript (Logika) --- */
+
+            // Mengambil elemen
+            const goalPost = document.getElementById('goalPost');
+            const ball = document.getElementById('ball');
+            const keeper = document.getElementById('goalkeeper');
+            const msgEl = document.getElementById('message');
+            const scoreEl = document.getElementById('score');
+            const attemptsEl = document.getElementById('attempts');
+
+            // State Game
+            let score = 0;
+            let attempts = 0;
+            let isKicking = false;
+
+            // Event Listener: Klik pada gawang
+            goalPost.addEventListener('click', function (e) {
+                if (isKicking) return; // Mencegah klik ganda saat animasi berjalan
+                shootBall(e);
+            });
+
+            function shootBall(event) {
+                isKicking = true;
+                attempts++;
+                updateUI();
+
+                // 1. Hitung posisi target tendangan (relatif terhadap gawang)
+                // rect adalah kotak pembatas elemen gawang
+                const rect = goalPost.getBoundingClientRect();
+
+                // X dan Y relatif dalam gawang (0,0 adalah pojok kiri atas gawang)
+                let targetX = event.clientX - rect.left;
+                let targetY = event.clientY - rect.top;
+
+                // Pastikan bola tidak keluar batas visual elemen gawang
+                if (targetX < 0) targetX = 0;
+                if (targetX > 300) targetX = 300; // Lebar gawang
+                if (targetY < 0) targetY = 0;
+                if (targetY > 150) targetY = 150; // Tinggi gawang
+
+                // 2. Animasi Bola
+                // Kita pindahkan bola dari bawah ke posisi klik di dalam gawang
+                // Menggunakan transform translate. Perlu offset karena posisi awal bola.
+                // Posisi awal bola ada di bottom: 20px, left: 50%.
+                // Kita harus menghitung perpindahan pixel.
+
+                // Secara visual kita set style bottom dan left langsung agar lebih mudah
+                // Tapi karena gawang relative terhadap container, kita hitung posisi relatif container
+                const containerRect = document.getElementById('gameArea').getBoundingClientRect();
+
+                // Posisi klik relatif terhadap container game
+                const clickXInContainer = event.clientX - containerRect.left;
+                // Posisi Y: Gawang ada di top 50px.
+                const clickYInContainer = event.clientY - containerRect.top;
+
+                // Animasi CSS Bola
+                ball.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                ball.style.left = clickXInContainer + 'px';
+                ball.style.top = clickYInContainer + 'px';
+                ball.style.transform = 'translateX(-50%) scale(0.6)'; // Efek mengecil (jauh)
+
+                // 3. Logika Kiper (AI Sederhana)
+                // Kiper memilih 3 posisi: Kiri (0-100), Tengah (100-200), Kanan (200-300)
+                const randomMove = Math.random();
+                let keeperMoveX = 0; // Offset translate X
+
+                // Logika gerakan kiper
+                if (randomMove < 0.33) {
+                    // Lompat Kiri
+                    keeperMoveX = -100; // geser ke kiri
+                } else if (randomMove < 0.66) {
+                    // Diam di Tengah
+                    keeperMoveX = 0;
+                } else {
+                    // Lompat Kanan
+                    keeperMoveX = 100; // geser ke kanan
+                }
+
+                keeper.style.transform = `translateX(calc(-50% + ${keeperMoveX}px))`;
+
+                // 4. Cek Hasil (Gol atau Tepis)
+                setTimeout(() => {
+                    checkResult(targetX, keeperMoveX);
+                }, 600); // Tunggu animasi selesai (0.6s)
+            }
+
+            function checkResult(ballX, keeperOffset) {
+                // Kita konversi offset kiper ke koordinat X gawang
+                // Gawang lebar 300. Tengah = 150.
+                // Keeper offset -100 berarti posisi X kiper skitar 50.
+                // Keeper offset 0 berarti posisi X kiper skitar 150.
+                // Keeper offset 100 berarti posisi X kiper skitar 250.
+
+                let keeperCenterPos = 150 + keeperOffset;
+
+                // Jarak antara bola dan pusat kiper
+                const distance = Math.abs(ballX - keeperCenterPos);
+
+                // Area jangkauan kiper (misal 60px)
+                const saveRange = 60;
+
+                if (distance < saveRange) {
+                    // TERTEPIS!
+                    showMessage('TERTEPIS!', 'miss');
+                } else {
+                    // GOAL!
+                    score++;
+                    showMessage('GOAL!!!', 'goal');
+                    triggerConfetti(); // Opsional visual
+                }
+
+                updateUI();
+
+                // Reset posisi untuk tendangan berikutnya
+                setTimeout(() => {
+                    resetPositions();
+                }, 1500);
+            }
+
+            function showMessage(text, type) {
+                msgEl.textContent = text;
+                msgEl.className = ''; // reset class
+                msgEl.classList.add(type === 'goal' ? 'text-goal' : 'text-miss');
+                msgEl.classList.add('show-msg');
+            }
+
+            function resetPositions() {
+                // Kembalikan bola ke titik putih
+                ball.style.transition = 'none'; // Hapus transisi agar instan
+                ball.style.top = '';
+                ball.style.bottom = '20px';
+                ball.style.left = '50%';
+                ball.style.transform = 'translateX(-50%) scale(1)';
+
+                // Kembalikan kiper ke tengah
+                keeper.style.transform = 'translateX(-50%)';
+
+                // Sembunyikan pesan
+                msgEl.classList.remove('show-msg');
+
+                isKicking = false;
+            }
+
+            function updateUI() {
+                scoreEl.textContent = `Skor: ${score}`;
+                attemptsEl.textContent = `Tendangan: ${attempts}`;
+            }
+
+            function resetGame() {
+                score = 0;
+                attempts = 0;
+                resetPositions();
+                updateUI();
+            }
+
+            // Efek Visual Tambahan (Confetti sederhana dengan CSS/JS console log trick)
+            function triggerConfetti() {
+                // Fungsi placeholder jika ingin menambahkan efek partikel nanti
+                // Saat ini hanya mengubah background gawang sebentar
+                document.querySelector('.game-container').style.borderColor = '#f1c40f';
+                setTimeout(() => {
+                    document.querySelector('.game-container').style.borderColor = '#fff';
+                }, 300);
+            }
+        </script>
+    </body>
+</html>
